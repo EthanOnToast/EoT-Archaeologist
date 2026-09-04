@@ -98,14 +98,14 @@ npm run dev -- explain src/cli.ts:12
 - [x] Files changed by an originating commit
 - [x] External/local Git repository support
 - [x] Commit diff retrieval
-- [ ] Display commit diffs in the CLI
+- [x] Display commit diffs in the CLI
 
 ## Roadmap
 
 - [x] Line-level Git archaeology
 - [x] External repository support
 - [x] Retrieve commit diffs
-- [ ] Display useful commit diffs in the CLI
+- [x] Display useful commit diffs in the CLI
 - [ ] GitHub repository URL support
 - [ ] Pull request discovery
 - [ ] GitHub issue and discussion discovery
