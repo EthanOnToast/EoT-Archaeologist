@@ -6,7 +6,7 @@ const program = new Command();
 
 program
   .name("eot-archaeologist")
-  .description("Dig through your codebase and discover why things exist.")
+  .description("Dig through your codebase and discover why things exist")
   .version("0.1.0");
 
 program
