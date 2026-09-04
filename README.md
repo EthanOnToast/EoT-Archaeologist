@@ -1,245 +1,149 @@
-🕵️ EoT Archaeologist
+# EoT Archaeologist
 
-Dig through your codebase and discover why things exist.
+**Dig through your codebase and discover why things exist.**
 
-EoT Archaeologist is an early-stage developer tool that uses Git history
-to investigate where code came from and who introduced it.
+EoT Archaeologist is a command-line tool for exploring the history behind your code. It uses Git history to trace a file or specific line back to the commit that introduced it, helping you understand how and why code ended up where it is.
 
-Instead of manually searching through git log and git blame, you can
-ask the Archaeologist to investigate a file or a specific line.
+> **Status:** Experimental — actively under development.
 
-🚧 Project status
+## What it does
 
-Early development / experimental
+Given a file:
 
-The project currently works locally against a Git repository and can:
-
-Inspect the history of a file
-
-Investigate the Git commit responsible for a specific line
-
-Show the author, date, commit message, and source line
-
-Show files changed in the originating commit
-
-Give a useful error when an invalid line number is requested
-
-GitHub Pull Request / Issue context and AI-powered explanations are
-planned, but are not implemented yet.
-
-📦 Installation
-
-For now, EoT Archaeologist is not published as an npm package.
-
-To try it from source:
-
-git clone https://github.com/EthanOnToast/EoT-Archaeologist.git
-cd EoT-Archaeologist
-npm install
-npm run build
-
-You need:
-
-Node.js 22+
-
-npm
-
-Git
-
-🔍 How to use it
-
-Investigate a file
-
-Run this from inside a Git repository:
-
+```bash
 npm run dev -- explain package.json
+```
 
-This shows the recent Git history for the file.
+EoT Archaeologist shows recent Git history for that file.
 
-Example:
+You can also investigate a specific line:
 
-🕵️ EoT ARCHAEOLOGIST
-
-File: package.json
-
-📜 HISTORY
-
-b958730  2026-09-04  EthanOnToast
-  Improve CLI description
-
-f0d0b3d  2026-09-04  EthanOnToast
-  Initial project setup
-
-Investigate a specific line
-
-You can also investigate an individual line:
-
+```bash
 npm run dev -- explain src/cli.ts:12
+```
 
-EoT Archaeologist uses git blame to find the commit that introduced
-that line.
+For a line-level investigation, EoT Archaeologist can currently show:
 
-Example:
+- The commit that introduced the line
+- The author
+- The commit date
+- The commit message
+- The source code on that line
+- Files changed by the originating commit
+- Historical commit diffs for a specific file (being integrated into the CLI)
 
-🕵️ EoT ARCHAEOLOGIST
-
-Investigating line 12 of src/cli.ts
-
-🔎 LINE ORIGIN
-
-Commit:  b958730...
-Author:  EthanOnToast
-Date:    2026-09-04T...
-Message: Improve CLI description
-
-Code:    .name("eot-archaeologist")
-
-📂 FILES CHANGED
-
-  src/cli.ts
-
-🧪 Try it on your own repository
-
-The easiest way to test the current version is to clone this project,
-then use the CLI from another Git repository.
+EoT Archaeologist can also investigate files in a **different local Git repository**, not just the repository where the tool is being developed.
 
 For example:
 
-cd ~/Projects
-git clone https://github.com/example/some-project.git
-cd some-project
+```bash
+npm run dev -- explain /path/to/another-project/src/auth.ts:47
+```
 
-Then run EoT Archaeologist from its source directory:
+## Why?
 
-cd /path/to/EoT-Archaeologist
-npm run dev -- explain /path/to/some-project/src/example.ts:42
+Git can tell you *when* code changed.
 
-The file you investigate must belong to a Git repository with Git
-history.
+EoT Archaeologist is being built to help answer the more useful question:
 
-Important
-
-The current version does not yet accept a GitHub URL such as:
-
-https://github.com/user/project/blob/main/src/file.ts#L42
-
-That is planned for a future version.
-
-🧠 Why does this exist?
-
-We've all opened an unfamiliar codebase and wondered:
-
-Why is this here?
-
-Who wrote this?
-
-Why was this weird workaround added?
-
-Can I safely remove it?
-
-What problem was this code solving?
-
-Git contains a surprising amount of the history needed to answer those
-questions.
-
-EoT Archaeologist is being built to turn that history into something
-easier to understand.
+> **Why does this code exist?**
 
 The long-term goal is to connect:
 
-Code
-  ↓
-Git blame
-  ↓
+```text
+File / Line
+    ↓
+Git Blame
+    ↓
 Commit
-  ↓
-Commit diff
-  ↓
+    ↓
+Commit Diff
+    ↓
 GitHub Pull Request
-  ↓
-GitHub Issue
-  ↓
-Historical context
-  ↓
-🧠 "Why this code exists"
+    ↓
+GitHub Issue / Discussion
+    ↓
+Historical Context
+    ↓
+Human-readable Explanation
+```
 
-🗺️ Roadmap
+## Installation
 
-Current
+Clone the repository and install dependencies:
 
-CLI
-
-File history
-
-Line-level investigation
-
-Git blame integration
-
-Commit information
-
-Changed-file information
-
-Invalid line handling
-
-Next
-
-Better commit diff analysis
-
-Investigate files outside the current working directory
-
-GitHub repository URL support
-
-GitHub Pull Request detection
-
-GitHub Issue detection
-
-Link code to the historical problem it solved
-
-Human-readable explanations
-
-Optional AI-powered explanations
-
-VS Code extension
-
-npm package
-
-🤝 Contributing
-
-This project is very early, so feedback and experimentation are welcome.
-
-If you find a bug:
-
-Check the existing issues.
-
-Create a new issue with:
-
-Your OS
-
-Node.js version
-
-Git version
-
-The command you ran
-
-The error/output you received
-
-If you have an idea for the project, open an issue and explain the
-problem you think it could solve.
-
-🛠️ Development
-
-Install dependencies:
-
+```bash
+git clone https://github.com/EthanOnToast/EoT-Archaeologist.git
+cd EoT-Archaeologist
 npm install
+```
+
+Build the project:
+
+```bash
+npm run build
+```
+
+Run it during development:
+
+```bash
+npm run dev -- explain src/cli.ts:12
+```
+
+## Current capabilities
+
+- [x] Git file history
+- [x] Line-level Git archaeology
+- [x] Commit metadata
+- [x] Files changed by an originating commit
+- [x] External/local Git repository support
+- [x] Commit diff retrieval
+- [ ] Display commit diffs in the CLI
+
+## Roadmap
+
+- [x] Line-level Git archaeology
+- [x] External repository support
+- [x] Retrieve commit diffs
+- [ ] Display useful commit diffs in the CLI
+- [ ] GitHub repository URL support
+- [ ] Pull request discovery
+- [ ] GitHub issue and discussion discovery
+- [ ] Historical context and explanations
+- [ ] AI-powered explanations
+- [ ] VS Code extension
+- [ ] npm package
+
+## Development
+
+The project is written in TypeScript and currently uses:
+
+- Node.js
+- TypeScript
+- Commander
+- Chalk
+- simple-git
 
 Build:
 
+```bash
 npm run build
+```
 
-Run during development:
+Run locally:
 
-npm run dev -- explain <file>
-
-Example:
-
+```bash
 npm run dev -- explain src/cli.ts:12
+```
+
+The project is intentionally being built incrementally. The goal is to make each stage useful on its own while working toward deeper code archaeology.
+
+## Contributing
+
+EoT Archaeologist is an open-source project and contributions are welcome.
+
+Ideas, issues, improvements, and experiments are encouraged.
+
+## License
+
+ISC
