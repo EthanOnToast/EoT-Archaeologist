@@ -168,3 +168,35 @@ export async function getCommitDetails(
     files,
   };
 }
+
+export async function getCommitDiff(
+  filePath: string,
+  hash: string
+): Promise<string> {
+  const { git, relativePath } = await getGitForFile(filePath);
+
+  const output = await git.raw([
+    "show",
+    "--format=",
+    "--no-ext-diff",
+    "--unified=3",
+    hash,
+    "--",
+    relativePath,
+  ]);
+
+  const usefulLines = output
+    .split("\n")
+    .filter((line) => {
+      if (line.startsWith("diff --git")) return false;
+      if (line.startsWith("index ")) return false;
+      if (line.startsWith("new file mode")) return false;
+      if (line.startsWith("deleted file mode")) return false;
+      if (line.startsWith("--- ")) return false;
+      if (line.startsWith("+++ ")) return false;
+
+      return true;
+    });
+
+  return usefulLines.join("\n").trim();
+}
