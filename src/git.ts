@@ -1,6 +1,27 @@
-import { simpleGit } from "simple-git";
+import { simpleGit, type SimpleGit, type DefaultLogFields } from "simple-git";
+import path from "node:path";
+import { realpath } from "node:fs/promises";
 
-const git = simpleGit();
+async function getGitForFile(filePath: string): Promise<{
+  git: SimpleGit;
+  relativePath: string;
+}> {
+  const absolutePath = await realpath(filePath);
+  const directory = path.dirname(absolutePath);
+
+  const git = simpleGit(directory);
+
+  const root = (
+    await git.revparse(["--show-toplevel"])
+  ).trim();
+
+  const relativePath = path.relative(root, absolutePath);
+
+  return {
+    git: simpleGit(root),
+    relativePath,
+  };
+}
 
 export interface Commit {
   hash: string;
@@ -12,8 +33,10 @@ export interface Commit {
 export async function getFileHistory(
   filePath: string
 ): Promise<Commit[]> {
-  const log = await git.log({
-    file: filePath,
+  const { git, relativePath } = await getGitForFile(filePath);
+
+  const log = await git.log<DefaultLogFields>({
+    file: relativePath,
   });
 
   return log.all.map((commit) => ({
@@ -36,7 +59,12 @@ export async function blameLine(
   filePath: string,
   lineNumber: number
 ): Promise<BlameResult> {
-  const fileContents = await git.show([`HEAD:${filePath}`]);
+  const { git, relativePath } = await getGitForFile(filePath);
+
+  const fileContents = await git.show([
+    `HEAD:${relativePath}`,
+  ]);
+
   const totalLines = fileContents.split("\n").length;
 
   if (lineNumber < 1 || lineNumber > totalLines) {
@@ -51,32 +79,36 @@ export async function blameLine(
     "-L",
     `${lineNumber},${lineNumber}`,
     "--",
-    filePath,
+    relativePath,
   ]);
 
-  const lines = output.split("\n");
+  const lines: string[] = output.split("\n");
 
-  // First line contains:
-  // <commit-hash> <original-line> <final-line> <num-lines>
   const firstLine = lines[0].trim();
   const hash = firstLine.split(/\s+/)[0];
 
-  const authorLine = lines.find((line) => line.startsWith("author "));
-  const authorTimeLine = lines.find((line) =>
+  const authorLine = lines.find((line: string) =>
+    line.startsWith("author ")
+  );
+
+  const authorTimeLine = lines.find((line: string) =>
     line.startsWith("author-time ")
   );
-  const summaryLine = lines.find((line) =>
+
+  const summaryLine = lines.find((line: string) =>
     line.startsWith("summary ")
   );
 
-  // The actual source code line starts with a tab.
-  const sourceLine = lines.find((line) => line.startsWith("\t"));
+  const sourceLine = lines.find((line: string) =>
+    line.startsWith("\t")
+  );
 
   if (!hash || !authorLine || !authorTimeLine || !summaryLine) {
     throw new Error("Could not parse Git blame information.");
   }
 
   const author = authorLine.substring("author ".length);
+
   const timestamp = Number(
     authorTimeLine.substring("author-time ".length)
   );
@@ -91,5 +123,48 @@ export async function blameLine(
     date,
     message,
     line: sourceLine?.substring(1) ?? "",
+  };
+}
+
+export interface CommitDetails {
+  hash: string;
+  author: string;
+  date: string;
+  message: string;
+  files: string[];
+}
+
+export async function getCommitDetails(
+  filePath: string,
+  hash: string
+): Promise<CommitDetails> {
+  const { git } = await getGitForFile(filePath);
+
+  const output = await git.raw([
+    "show",
+    "--format=%H%n%an%n%ad%n%s",
+    "--name-only",
+    "--no-renames",
+    hash,
+  ]);
+
+  const lines: string[] = output.trim().split("\n");
+
+  const commitHash = lines[0];
+  const author = lines[1];
+  const date = lines[2];
+  const message = lines[3];
+
+  const files = lines
+    .slice(4)
+    .map((line: string) => line.trim())
+    .filter((line: string) => line.length > 0);
+
+  return {
+    hash: commitHash,
+    author,
+    date,
+    message,
+    files,
   };
 }

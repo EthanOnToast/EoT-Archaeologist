@@ -1,6 +1,10 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import { getFileHistory, blameLine } from "./git.js";
+import {
+  getFileHistory,
+  blameLine,
+  getCommitDetails,
+} from "./git.js";
 
 const program = new Command();
 
@@ -43,6 +47,16 @@ program
       console.log(`Message: ${result.message}`);
       console.log();
       console.log(`Code:    ${result.line}`);
+
+      const details = await getCommitDetails(filePath, result.hash);
+
+      console.log();
+      console.log(chalk.bold("📂 FILES CHANGED"));
+      console.log();
+
+for (const changedFile of details.files) {
+  console.log(`  ${changedFile}`);
+}
     } else {
       console.log(chalk.bold(`File: ${file}`));
       console.log();
