@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import { getFileHistory } from "./git.js";
+import { getFileHistory, blameLine } from "./git.js";
 
 const program = new Command();
 
@@ -14,14 +14,39 @@ program
   .description("Investigate the history of a file")
   .argument("<file>", "File to investigate")
   .action(async (file: string) => {
-    console.log();
-    console.log(chalk.bold("🕵️ EoT ARCHAEOLOGIST"));
-    console.log("────────────────────────────────────");
-    console.log();
-    console.log(chalk.bold(`File: ${file}`));
-    console.log();
+  console.log();
+  console.log(chalk.bold("🕵️ EoT ARCHAEOLOGIST"));
+  console.log("────────────────────────────────────");
+  console.log();
 
-    try {
+  const match = file.match(/^(.+):(\d+)$/);
+
+  try {
+    if (match) {
+      const filePath = match[1];
+      const lineNumber = Number(match[2]);
+
+      console.log(
+        chalk.bold(
+          `Investigating line ${lineNumber} of ${filePath}`
+        )
+      );
+      console.log();
+
+      const result = await blameLine(filePath, lineNumber);
+
+      console.log(chalk.bold("🔎 LINE ORIGIN"));
+      console.log();
+      console.log(`Commit:  ${result.hash}`);
+      console.log(`Author:  ${result.author}`);
+      console.log(`Date:    ${result.date}`);
+      console.log(`Message: ${result.message}`);
+      console.log();
+      console.log(`Code:    ${result.line}`);
+    } else {
+      console.log(chalk.bold(`File: ${file}`));
+      console.log();
+
       const commits = await getFileHistory(file);
 
       if (commits.length === 0) {
@@ -44,17 +69,21 @@ program
       }
 
       console.log(
-        chalk.gray(`Showing ${Math.min(commits.length, 10)} commits.`)
-      );
-    } catch (error) {
-      console.error();
-      console.error(chalk.red("Could not inspect this file."));
-      console.error(
         chalk.gray(
-          "Make sure you're running the command inside a Git repository."
+          `Showing ${Math.min(commits.length, 10)} commits.`
         )
       );
     }
-  });
+  } catch (error) {
+    console.error();
+    console.error(
+      chalk.red("❌ Could not investigate this code.")
+    );
+    console.error();
+    console.error(
+      chalk.yellow(String(error))
+    );
+  }
+});
 
 program.parseAsync();
